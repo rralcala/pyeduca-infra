@@ -1,0 +1,33 @@
+<div class="info">
+  <h2><%= _("Edit Blacklisted laptop") %></h2>
+  <div><%= _("Modify blacklisted laptop's information") %></div>
+</div>
+
+<% if @blacklist.errors.any? %>
+  <ul>
+    <% @blacklist.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= form_tag({:action => :update, :id => @blacklist.id}, :class => "wufoo") do %>
+
+  <p>
+    <%= label_tag(:name, _("Serial Number:"), :class => "desc") %><br />
+    <%= text_field_tag(:serial_number, @blacklist.serial_number, :class => "field text small") %>
+  </p>
+
+  <p>
+    <%= label_tag(:reason, _("Reason:"), :class => "desc") %><br />
+    <%= text_area_tag(:reason, @blacklist.reason, :class => "field text small") %> 
+  </p>
+
+  <p>
+    <%= submit_tag(_("Save"), :class => "buttons") %>
+  </p>
+<% end %>
+
+<div class="info">
+<%= link_to _('Back'), :action => 'index' %>
+</div>

@@ -1,0 +1,29 @@
+<div class="info">
+  <h2><%= _("Blacklisted laptops") %></h2>
+  <div><%= _("List of all blacklisted laptops of the system") %></div>
+</div>
+
+<table>
+  <tr>
+    <th><%= label_tag(:name, _("Serial Number"), :class => "desc") %></th>
+    <th><%= label_tag(:email, _("Reason"), :class => "desc") %></th>
+    <th><%= label_tag(:bucket, _("Created at"), :class => "desc") %></th>
+  </tr>
+
+<% @blacklists.each do |blacklist| %>
+  <tr>
+    <td><%= label_tag(:serial_number, blacklist.serial_number, :class => "field text addr") %></td>
+    <td><%= label_tag(:reason, blacklist.reason, :class => "field text addr") %></td>
+    <td><%= label_tag(:created_at, blacklist.created_at, :class => "field text addr") %></td>
+    <td><%= link_to _('Edit'), :action => 'edit', :id => blacklist.id %></td>
+    <td><%= link_to _('Destroy'), :action => 'destroy', :id => blacklist.id %></td>
+  </tr>
+<% end %>
+</table>
+
+<br>
+
+<div class="info">
+  <%= link_to _('Create blacklisted laptop'), :action => 'new' %>
+  <%= link_to _('Back'), :controller => 'users', :action => 'options' %>
+<div>

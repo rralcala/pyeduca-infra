@@ -1,0 +1,33 @@
+<div class="info">
+  <h2><%= _("Users") %></h2>
+  <div><%= _("List of all users of the system") %></div>
+</div>
+
+<table>
+  <tr>
+    <th><%= label_tag(:name, _("Name"), :class => "desc") %></th>
+    <th><%= label_tag(:email, _("Email"), :class => "desc") %></th>
+    <th><%= label_tag(:bucket, _("Bucket"), :class => "desc") %></th>
+    <th><%= label_tag(:activation_limit, _("Activation Limit (days)"), :class => "desc") %></th>
+    <th><%= label_tag(:can_create_dev_keys, _("Can Create Dev keys"), :class => "desc") %></th>
+  </tr>
+
+<% @users.each do |user| %>
+  <tr>
+    <td><%= label_tag(:name, user.name, :class => "field text addr") %></td>
+    <td><%= label_tag(:email, user.email, :class => "field text addr") %></td>
+    <td><%= label_tag(:bucket, user.bucket, :class => "field text addr") %></td>
+    <td><%= label_tag(:activation_limit, user.activation_limit, :class => "field text addr") %></td>
+    <td><%= label_tag(:can_create_dev_keys, user.devel_keys_allowed ? _("Yes") : _("No"), :class => "field text addr") %></td>
+    <td><%= link_to _('Edit'), :action => 'edit', :id => user.id %></td>
+    <td><%= link_to _('Destroy'), :action => 'destroy', :id => user.id %></td>
+  </tr>
+<% end %>
+</table>
+
+<br>
+
+<div class="info">
+  <%= link_to _('Create user'), :action => 'new' %>
+  <%= link_to _('Back'), :action => 'options' %>
+<div>

@@ -1,0 +1,8 @@
+source "http://rubygems.org"
+ruby '1.9.3'
+gem 'rack-cache', '1.2'
+gem 'rake', '0.9.6'
+gem 'rails', '3.2.8'
+gem 'mysql2', '0.3.12b4'
+gem 'fast_gettext', '0.6.1'
+gem 'gettext_i18n_rails', '0.6.6'

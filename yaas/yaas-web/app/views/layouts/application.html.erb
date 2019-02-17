@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Yet Another Activation System</title>
+
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+
+  <%= stylesheet_link_tag 'form' %>
+  <%= stylesheet_link_tag 'theme' %>
+  <%= stylesheet_link_tag 'structure' %>
+</head>
+
+<body id="public">
+
+    <center>
+      <p style="color: green"> <%= flash[:notice] %></p>
+      <p style="color: red">   <%= flash[:error] %></p>
+    </center.
+
+    <div id="container">
+      <h1><a id="logo" href="">Wufoo</a></h1>
+      <%= yield %>
+    <div>
+    
+</body>
+
+</html>

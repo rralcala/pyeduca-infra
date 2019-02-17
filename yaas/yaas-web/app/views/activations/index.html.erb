@@ -1,0 +1,44 @@
+<div class="info">
+  <h2><%= _("Activations") %></h2>
+  <div><%= _("Download the activations you have created") %></div>
+</div>
+
+<table>
+  <tr>
+    <% if @admin %>
+      <th><%= label_tag(:name, _("Name"), :class => "desc") %></th>
+    <% end %>
+
+    <th><%= label_tag(:created_at, _("Created"), :class => "desc") %></th>
+    <th><%= label_tag(:method, _("Method"), :class => "desc") %></th>
+    <th><%= label_tag(:bucket, _("Bucket"), :class => "desc") %></th>
+    <th><%= label_tag(:comments, _("Comments"), :class => "desc") %></th>
+  </tr>
+
+<% @activations.each do |activation| %>
+  <tr>
+    <% if @admin %>
+      <td><%= label_tag(:name, activation.user.name, :class => "field text addr") %></td>
+    <% end %>
+
+    <td><%= label_tag(:created_at, activation.created_at, :class => "field text addr") %></td>
+    <td><%= label_tag(:method, activation.method, :class => "field text addr") %></td>
+    <td><%= label_tag(:bucket, activation.bucket, :class => "field text addr") %></td>
+    <td><%= label_tag(:comments, activation.comments, :class => "field text addr") %></td>
+    <td><%= link_to _('Download'), :action => 'download', :id => activation.id %></td>
+    <td><%= link_to _('CJson format'), :action => 'download_cjson', :id => activation.id %></td>
+
+    <% if @admin %>
+      <td><%= link_to _('Delete'),   :action => 'destroy',  :id => activation.id %></td>
+    <% end %>
+
+  </tr>
+<% end %>
+</table>
+
+<br>
+
+<div class="info">
+  <%= link_to _('Create Activation'), :action => 'new' %> 
+  <%= link_to _('Back'), :controller => 'users', :action => 'options' %>
+</div>

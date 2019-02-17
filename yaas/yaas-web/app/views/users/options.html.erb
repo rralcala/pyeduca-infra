@@ -1,0 +1,23 @@
+<div class="info">
+  <h2><%= _("%s's Options") % @user.name.upcase %></h2>
+  <% if !@user.admin %>
+    <div><%= _("You currently have %d activations available in your bucket") % @user.bucket %></div>
+  <% else%>
+    <div><%= _("System administration options") %></div>
+  <% end %>
+</div>
+
+
+<ul>
+  <% if @user.admin %>
+    <li> <%= link_to _('List users'), :controller => 'users', :action => 'index' %> </li>
+    <li> <%= link_to _('Create user'), :controller => 'users', :action => 'new' %> </li>
+    <li> <%= link_to _('Blacklist'), :controller => 'blacklist', :action => 'index' %> </li>
+  <% end %>
+
+  <li> <%= link_to _('List activations'), :controller => 'activations', :action => 'index' %> </li>
+  <li> <%= link_to _('Create activation'), :controller => 'activations', :action => 'new' %> </li>
+
+  <li> <%= link_to _('Change password'), :controller => 'users', :action => 'change_password', :id => @user.id %> </li>
+  <li> <%= link_to _('Logout'), :controller => 'sessions', :action => 'destroy' %> </li>
+</ul>

@@ -1,0 +1,46 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: puppet
+spec:
+  selector:
+    app: puppet
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8140
+    targetPort: 8140
+  externalIPs:
+  - <your-external-ip>
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: puppet
+spec:
+  selector:
+    matchLabels:
+      app: puppet
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: puppet
+    spec:
+      containers:
+      - image: puppet
+        name: puppet
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8140
+          name: puppet
+        volumeMounts:
+          # name must match the volume name below
+          - name: puppet-var
+            mountPath: /var/lib/puppet
+      volumes:
+        - name: puppet-var
+          hostPath:
+            # directory location on host
+            path: /var/lib/puppet

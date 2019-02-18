@@ -11,7 +11,7 @@ spec:
     port: 8140
     targetPort: 8140
   externalIPs:
-  - <your-external-ip>
+  - 192.168.1.154 
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
@@ -29,7 +29,7 @@ spec:
         app: puppet
     spec:
       containers:
-      - image: puppet
+      - image: cloud.canister.io:5000/rralcala/puppet 
         name: puppet
         imagePullPolicy: IfNotPresent
         ports:

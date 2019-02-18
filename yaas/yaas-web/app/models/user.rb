@@ -76,7 +76,7 @@ class User < ActiveRecord::Base
 
   private
 
-  def self.hash_password(password, salt=YAAS_CONFIG['password_salt'])
+  def self.hash_password(password, salt=YAAS_CONFIG[:password_salt])
     Digest::SHA512.hexdigest("#{password}:#{salt}")
   end
 

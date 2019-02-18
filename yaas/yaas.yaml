@@ -31,7 +31,7 @@ spec:
         app: yaas-web
     spec:
       containers:
-      - image: yaas-web
+      - image: docker.io/rralcala/yaas-web
         name: yaas-web
         imagePullPolicy: IfNotPresent
         ports:

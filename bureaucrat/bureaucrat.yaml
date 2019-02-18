@@ -31,7 +31,7 @@ spec:
         app: bureaucrat
     spec:
       containers:
-      - image: bureaucrat
+      - image: docker.io/rralcala/bureaucrat
         name: bureaucrat
         imagePullPolicy: IfNotPresent
         ports:

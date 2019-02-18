@@ -31,7 +31,7 @@ spec:
         app: inventario
     spec:
       containers:
-      - image: inventario
+      - image: docker.io/rralcala/inventario
         name: inventario
         imagePullPolicy: IfNotPresent
         ports:

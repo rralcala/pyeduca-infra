@@ -1,4 +1,4 @@
-# Copyright Paraguay Educa 2010, Martin Abente
+# Copyright Paraguay Educa 2010, Martin Abente, Roberto Rodriguez Alcala
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,13 +22,11 @@ include Socket::Constants
 
 module YaasWrapper
   def self.generate_devkeys(hashes_list)
-    #results = request_to_server("generate_devkeys", hashes_list)
-    #results["devkeys_list"]
     request_to_bureaucrat(hashes_list, 0, 'developer')
   end
 
   def self.generate_leases(hashes_list, duration)
-    request_to_aws(hashes_list, duration, 'lease')
+    request_to_bureaucrat(hashes_list, duration, 'lease')
   end
 
   def self.parse_file(file)

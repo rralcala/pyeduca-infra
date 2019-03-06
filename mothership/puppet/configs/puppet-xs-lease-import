@@ -1,0 +1,12 @@
+#!/bin/bash
+# Script to copy leases synchronized by puppet into a temporary 
+# directory and then import from the tmp dir them using xs-activation-import
+# This is needed because xs-activation-import deletes the lease base 
+# file after import. If puppet used it directly, we would resync and 
+# reimport the leases every time puppet synchronizes (it would notice 
+# the deleted file and resend the leases).
+
+rm -rf /tmp/xsleaseimport/*
+mkdir -p /tmp/xsleaseimport
+cp /var/lib/xsleases/leases.dat /tmp/xsleaseimport/lease.sig
+/usr/bin/xs-activation-import /tmp/xsleaseimport

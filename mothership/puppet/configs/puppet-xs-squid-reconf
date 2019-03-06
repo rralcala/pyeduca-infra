@@ -1,0 +1,4 @@
+#!/bin/bash
+myhostname=$(</etc/sysconfig/xs_domain_name)
+/etc/sysconfig/olpc-scripts/domain_config.d/squid ${myhostname}
+

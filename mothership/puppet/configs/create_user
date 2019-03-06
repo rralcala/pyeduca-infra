@@ -1,0 +1,107 @@
+#!/bin/sh
+#  Copyright 2007, One Laptop per Child
+#  Author: Nelson Elhage
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
+
+# create_user
+# This script creates a user account for the registration server
+#
+# echo entering as `whoami` > /tmp/create_user.log
+LOG_LEVEL=user.warning
+LOG_TAG=olpc_idmgr
+
+if [ `whoami` != "root" ]; then
+        exec sudo -S $0
+fi
+
+log() {
+    echo "$1" | logger -t $LOG_TAG -s -p $LOG_LEVEL
+}
+
+die() {
+    log "$1"
+    exit 1
+}
+
+PASSWD_ONLY=0
+# this option allows the homedir setup (including dealings with ssh key)
+# to be skipped. useful when restoring from backups.
+if [ "$1" == "--passwd-only" ]; then
+       PASSWD_ONLY=1
+fi
+
+read username
+read full_name
+if [ "$PASSWD_ONLY" == "0" ]; then
+       read uuid       #unused!
+       read pubkey
+fi
+
+# check for sane values
+export LC_ALL=C
+echo "$username" | grep -s -E '^[A-Z]{3}[A-F0-9]{8}$' &> /dev/null || die "bad username"
+if [ "$PASSWD_ONLY" == "0" ]; then
+       echo "$pubkey" | grep -s -E '^[A-Za-z0-9+/=]+$' &> /dev/null || die "bad public key"
+fi
+
+
+homedir=/library/users/$username
+XO_USERS_GROUP=xousers
+RSSH_USERS_GROUP=rsshusers
+
+
+#make sure the xousers and rsshusers groups exist
+getent group $XO_USERS_GROUP > /dev/null 2>&1 || groupadd $XO_USERS_GROUP
+getent group $RSSH_USERS_GROUP > /dev/null 2>&1 || groupadd $RSSH_USERS_GROUP
+
+if getent passwd "$username" > /dev/null 2>&1; then
+    # $fullname may have changed.
+    /usr/sbin/usermod -c "$full_name" "$username" || die "unable to change full name"
+    NEW_USER=0
+else
+    /usr/sbin/useradd -c "$full_name" -d "$homedir"  \
+        -G $XO_USERS_GROUP,$RSSH_USERS_GROUP -s /usr/bin/rssh "$username" \
+        || die "Unable to create user"
+    NEW_USER=1
+fi
+
+chown -R $username.$username $homedir
+[ "$PASSWD_ONLY" == "1" ] && exit 0
+#from here, if a new user was created, a failure will leave the user
+#there but unconfigured. So rather than simply dying, we try to clean
+#up first.
+
+clean_up_and_die(){
+    log "$1"
+    if [ $NEW_USER == 1 ]; then
+        log "deleting half-created user"
+        /usr/sbin/userdel "$username" || log "... failed!"
+    fi
+    exit 1
+}
+
+
+userhome=`getent passwd "$username" | awk -F: '{print $6}'`
+cd $userhome || clean_up_and_die "Couldn't cd into user's home directory"
+chown -R $username.$username $homedir
+
+mkdir -p --mode=700 .ssh || clean_up_and_die "Unable to mkdir .ssh"
+echo "ssh-dss $pubkey" >> .ssh/authorized_keys || clean_up_and_die "Unable to set up authorized_keys"
+chmod 600 .ssh/authorized_keys  || clean_up_and_die "Unable to chmod authorized_keys"
+chown -R $username .ssh || clean_up_and_die "Unable to chown .ssh"
+
+#clean_up_and_die goodbye

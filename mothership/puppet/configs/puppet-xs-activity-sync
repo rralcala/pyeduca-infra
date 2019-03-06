@@ -1,0 +1,25 @@
+#!/bin/bash
+# Synchronize /library/xs-activity-server/activities from 
+# /library/xs-activity-server/incoming
+# and generate the .html
+#
+# The separation of "incoming" (where puppet syncs to) and "activities" 
+# (which clients use, and where the HTML goes) is because the HTML generation
+# results in an mtime change, which results in puppet regenerating the HTML
+# on the next cycle, generating another mtime change, etc.
+
+/usr/bin/wget -N http://pye-leases.s3-website-us-east-1.amazonaws.com/xs-activities.tar.bz2 -P /tmp
+
+tar -xjf xs-activities.tar.bz2 -C /library/xs-activity-server/incoming
+
+if [[ $? != 0 ]]; then
+	echo "Failed to sync"
+	exit 1
+fi
+
+rsync -a --delete --exclude 'index.html.*' \
+	/library/xs-activity-server/incoming/ \
+	/library/xs-activity-server/activities/
+
+/usr/bin/xs-regenerate-activities /library/xs-activity-server/activities
+

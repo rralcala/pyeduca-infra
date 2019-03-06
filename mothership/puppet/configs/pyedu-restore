@@ -1,0 +1,213 @@
+#!/bin/bash
+# Restauracion de datos desde directorio central
+# Author: Rodolfo Arce <ras@paraguayeduca.org>
+RESTORE_DIR="/library/restore"
+
+if [[ "$(whoami)" != "root" ]]; then
+	echo "Debe ser administrador(root) para realizar las tareas." >&2
+	exit 1
+fi
+
+if [ ! -d $RESTORE_DIR ]; then
+	mkdir $RESTORE_DIR;
+fi
+
+if [ ! -z "$1" ]; then
+        BACKUP_SERVER=$1;
+else
+        echo "No se ingreso el origen del cual descargar los datos";
+	exit 1;
+fi;
+
+
+function Moodle {
+	if [ ! -d $RESTORE_DIR/moodle ]; then
+		mkdir $RESTORE_DIR/moodle;
+	fi
+
+	## Rsync from backup server
+	rsync -ap $BACKUP_SERVER/backup/moodle/ $RESTORE_DIR/moodle/;
+
+	if [[ $? != 0 ]]; then
+        	echo "Error descargando la informacion de moodle" >&2
+	        exit 2
+	fi
+
+	if [ -f  $RESTORE_DIR/moodle/xs-backup-moodle.pgsql ]; then
+		echo "- Base de datos moodle.. "
+		cat $RESTORE_DIR/moodle/xs-backup-moodle.pgsql | sudo -u postgres pg_restore -Fc > /dev/null
+	else
+       		echo "No hay base de datos." >&2
+		exit 3
+	fi
+}
+
+function Users {
+	if [ ! -d $RESTORE_DIR/users ]; then
+		mkdir $RESTORE_DIR/users;
+	fi
+
+	## Rsync from backup server
+	rsync -ap $BACKUP_SERVER/backup/users/ $RESTORE_DIR/users/;
+
+	if [[ $? != 0 ]]; then
+        	echo "Error descargando la informacion" >&2
+	        exit 2
+	fi
+
+	echo "Copiado archivos: ";
+
+	if [ -f $RESTORE_DIR/users/identity.db ]; then
+		echo "- Usuarios..";
+		/etc/init.d/idmgr stop
+		cp $RESTORE_DIR/users/identity.db  /home/idmgr/identity.db;
+IFS="
+"
+errs=0
+	for line in $(/home/idmgr/list_registration); do
+		# only match lines that include a tab
+		# (this ignores the first line that says "Listing registrations...")
+		[[ $line =~ "	" ]] || continue
+		fullname=${line%%	*}
+		username=${line#*	}
+		echo -e "${username}\n${fullname}" | /home/idmgr/create_user --passwd-only
+		[[ $? == 0 ]] || (( errs++ ))
+	done
+	[[ ${errs} -gt 0 ]] && echo "WARNING: encountered $errs errors recreating user accounts." >&2	
+	
+	/etc/init.d/idmgr start
+	
+	else
+       		echo "No hay lista de usuarios." >&2
+		exit 4
+	fi
+}
+
+
+function Plone {
+	if [ ! -d $RESTORE_DIR/plone ]; then
+		mkdir $RESTORE_DIR/plone;
+	fi
+
+	## Rsync from backup server
+	rsync -ap $BACKUP_SERVER/backup/plone/ $RESTORE_DIR/plone/;
+
+	if [[ $? != 0 ]]; then
+        	echo "Error descargando la informacion" >&2
+	        exit 2
+	fi
+
+
+	echo "- Pagina web.. ";
+
+	if [ -f $RESTORE_DIR/plone/Data.fs ]; then
+		service zope stop;
+		cp $RESTORE_DIR/plone/Data.fs /var/lib/zope/var/Data.fs;
+		service zope start;
+	else
+       		echo "No hay plone." >&2
+		exit 5
+	fi
+}
+
+function Uploads {
+
+	echo "- Uploads.. ";
+	rsync -ap $BACKUP_SERVER/backup/uploads/ /library/uploads/;
+
+	if [[ $? != 0 ]]; then
+        	echo "Error descargando la informacion" >&2
+	        exit 2
+	fi
+
+
+}
+
+function SSH {
+
+	echo "- SSH.. ";
+	rsync -ap $BACKUP_SERVER/backup/ssh/ /etc/ssh/;
+
+	if [[ $? != 0 ]]; then
+        	echo "Error descargando la informacion" >&2
+	        exit 2
+	fi
+
+
+}
+
+function Homes {
+
+	echo "- Datos de los usuarios.. ";
+	rsync -ap $BACKUP_SERVER/homes/ /library/users/;
+
+	if [[ $? != 0 ]]; then
+        	echo "Error descargando la informacion" >&2
+	        exit 2
+	fi
+
+
+	for serial in $(ls -1 /library/users/); do
+		chown -fR $serial.$serial /library/users/$serial;
+		chown -fR $serial.$serial /library/users/$serial/.ssh/
+		chmod 700 /library/users/$serial/.ssh/;
+		chmod 600 /library/users/$serial/.ssh/authorized_keys;
+	done
+
+	if [[ $? != 0 ]]; then
+        	echo "Error dando los permisos" >&2
+	        exit 6
+	fi
+
+
+}
+
+## 
+echo "Iniciando backup.. "
+
+while (( $# )); do
+
+	if [[ "$BACKUP_SERVER" == "$1" ]]; then
+		shift
+	else
+
+	case $1 in
+	   --all )
+		SSH
+	 	Moodle
+		Plone
+		Uploads
+		Users
+		Homes
+  		;;
+	   --moodle )
+	 	Moodle
+	 	;;
+	   --ssh )
+	 	SSH
+	 	;;
+	   --plone )
+	 	Plone
+		;;
+	   --uploads )
+	 	Uploads
+	 	;;
+	   --homes )
+	 	Homes
+	 	;;
+	   --users )
+	 	Users
+	 	;;
+
+	esac
+
+	shift
+
+	fi
+done
+
+echo "Finalizado";
+
+exit 0
+
+

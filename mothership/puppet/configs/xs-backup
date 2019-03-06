@@ -1,0 +1,70 @@
+#!/bin/bash
+# Backup user data into a disguised tar archive.
+# Author: Daniel Drake <dsd@laptop.org>
+
+if [[ "$(whoami)" != "root" ]]; then
+	echo "Must be run as root." >&2
+	exit 1
+fi
+
+compress=1
+
+TEMP=$(getopt --name "xs-backup" --longoptions "uncompressed" --options "u" -- "$@")
+eval set -- "$TEMP"
+while true; do
+	case "$1" in
+		-u|--uncompressed)
+			compress=0
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "Internal error!" >&1
+			exit 1
+			;;
+		esac
+done
+
+if [[ $# -ne 1 ]]; then
+	echo "Usage: $0 [--uncompressed] <outputfile>" >&2
+	echo >&2
+	echo "Backs up XS user data to <outputfile>.xsbackup1" >&2
+	exit 1
+fi
+
+
+tgt=$1
+dest=$1.xsbackup1
+if [[ "$compress" == "1" ]]; then
+	dest="${dest}.gz"
+	compressflags="-z"
+fi
+
+echo "Creating backup $tgt"
+
+echo " - Back up moodle database"
+sudo -u postgres pg_dump -Fc moodle-xs > /library/xs-backup-moodle.pgsql
+if [[ $? != 0 ]]; then
+	rm -f /library/xs-backup-moodle.pgsql
+	echo "Failed to dump moodle database." >&2
+	exit 1
+fi
+
+echo " - Create archive"
+/etc/init.d/idmgr stop
+tar -c ${compressflags} --acls -C / -f ${dest} library/xs-backup-moodle.pgsql home/idmgr/identity.db var/lib/moodle library/users
+retval=$?
+rm -f /library/xs-backup-moodle.pgsql
+/etc/init.d/idmgr start
+if [[ $retval != 0 ]]; then
+	rm -f ${dest}
+	echo "Failed to create backup file." >&2
+	exit $retval
+fi
+
+echo "Done! Output at ${dest}"
+exit 0
+

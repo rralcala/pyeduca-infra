@@ -1,0 +1,11 @@
+#!/bin/bash
+# script to create cacti db user and import the database
+# can't be done directly with puppet as we use bash globbing in the 2nd command
+
+mysqlroot=$1
+mysqlcacti=$2
+mysql -uroot -p${mysqlroot} -e "CREATE DATABASE cacti; GRANT ALL ON cacti.* TO 'cacti'@'localhost' IDENTIFIED BY '${mysqlcacti}';"
+mysql -ucacti -p${mysqlcacti} cacti < /usr/share/doc/cacti-0.*/cacti.sql
+# ignore errors, in case this has already been run before
+exit 0
+

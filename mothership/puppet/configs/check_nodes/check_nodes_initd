@@ -1,0 +1,61 @@
+#!/bin/bash
+# check_nodes       Init script for running the daemon that updates access points statuses
+#
+# chkconfig: - 98 02
+#
+# description: access point monitoring daemon
+# processname: check_nodes.rb
+
+
+PATH=/usr/bin:/sbin:/bin:/usr/sbin
+export PATH
+
+runasuser="check_nodes"
+prog="/usr/local/check_nodes/check_nodes_daemon.rb"
+logfile="/var/log/check_nodes.log"
+RETVAL=0
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+start() {
+    echo -n $"Starting check_nodes: "
+
+    /sbin/runuser -s /bin/sh -c "ruby $prog start" $runasuser > $logfile 2>&1
+    /bin/usleep 500000
+    status $prog &> /dev/null && echo_success || echo_failure
+}
+
+stop() {
+    echo -n $"Stopping check_nodes: "
+    /sbin/runuser -s /bin/sh -c "ruby $prog stop" $runasuser
+    RETVAL=$?
+    echo
+    [ $RETVAL = 0 ] 
+}
+
+status () {
+    /sbin/runuser -s /bin/sh -c "ruby $prog status" $runasuser | grep -q ": running"
+   [[ $? == 0 ]] && return 0 || return 3
+}
+
+
+case "$1" in
+  start)
+  start
+  RETVAL=$?
+  ;;
+  stop) 
+  stop
+  RETVAL=$?
+  ;;
+  status)
+  status
+  RETVAL=$?
+  ;;
+  *)
+  echo $"Usage: $0 {start|stop|status}"
+  exit 1
+esac
+
+exit $RETVAL

@@ -1,0 +1,89 @@
+#!/bin/bash
+# Backup de datos a un directorio para rsync
+# Author: Rodolfo Arce <ras@paraguayeduca.org>
+BACKUP_DIR="/library/backup"
+
+if [[ "$(whoami)" != "root" ]]; then
+	echo "Must be run as root." >&2
+	exit 1
+fi
+
+if [ ! -d $BACKUP_DIR ]; then
+        mkdir $BACKUP_DIR;
+fi
+
+if [ ! -d $BACKUP_DIR/users ]; then
+        mkdir $BACKUP_DIR/users;
+fi
+
+if [ ! -d $BACKUP_DIR/plone ]; then
+        mkdir $BACKUP_DIR/plone;
+fi
+
+if [ ! -d $BACKUP_DIR/moodle ]; then
+        mkdir $BACKUP_DIR/moodle;
+	mkdir $BACKUP_DIR/moodle/data;
+
+fi
+
+if [ ! -d $BACKUP_DIR/uploads ]; then
+        mkdir $BACKUP_DIR/uploads;
+fi
+
+if [ ! -d $BACKUP_DIR/ssh ]; then
+        mkdir $BACKUP_DIR/ssh;
+fi
+
+
+echo "Iniciando backup.. "
+
+echo -n "Base de datos moodle.. "
+
+if [ -f  $BACKUP_DIR/moodle/xs-backup-moodle.pgsql ]; then
+	mv $BACKUP_DIR/moodle/xs-backup-moodle.pgsql $BACKUP_DIR/moodle/$(date -I)-moodle.pgsql;
+	sudo -u postgres pg_dump -Fc moodle-xs > $BACKUP_DIR/moodle/xs-backup-moodle.pgsql;
+else
+	sudo -u postgres pg_dump -Fc moodle-xs > $BACKUP_DIR/moodle/xs-backup-moodle.pgsql
+fi
+
+if [[ $? != 0 ]]; then
+	rm -f $BACKUP_DIR/moodle/xs-backup-moodle.pgsql
+	echo "Fallo en echar la base de dato." >&2
+	exit 1
+fi
+
+/etc/init.d/idmgr stop
+
+echo "Copiado archivos: ";
+echo -n "Usuarios..";
+
+if [ -f $BACKUP_DIR/users/identity.db ]; then
+        mv $BACKUP_DIR/users/identity.db $BACKUP_DIR/users/$(date -I)-identity.db;
+	cp /home/idmgr/identity.db $BACKUP_DIR/users/identity.db;
+else
+	cp /home/idmgr/identity.db $BACKUP_DIR/users/identity.db;
+fi
+
+/etc/init.d/idmgr start
+
+echo -n "Pagina web.. ";
+
+if [ -f $BACKUP_DIR/plone/Data.fs ]; then
+	mv $BACKUP_DIR/plone/Data.fs $BACKUP_DIR/plone/$(date -I)-Data.fs;
+	cp /var/lib/zope/var/Data.fs $BACKUP_DIR/plone/;
+else
+	cp /var/lib/zope/var/Data.fs $BACKUP_DIR/plone/;
+fi
+
+echo -n "Moodle.. ";
+rsync -a -u /var/lib/moodle/ $BACKUP_DIR/moodle/data/
+
+echo -n "Uploads.. ";
+rsync -a -u /library/uploads/ $BACKUP_DIR/uploads/
+
+echo -n "LLaves encriptacion.."
+rsync -a -u /etc/ssh/ $BACKUP_DIR/ssh/
+
+echo "Finalizado";
+exit 0
+

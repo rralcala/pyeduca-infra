@@ -1,0 +1,5 @@
+[rpmfusion-updates]
+name=Packages from rpmfusion
+baseurl=http://download1.rpmfusion.org/free/fedora/updates/9/i386/
+enabled=1
+gpgcheck=0

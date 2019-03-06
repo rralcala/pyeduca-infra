@@ -1,0 +1,5 @@
+[pyeduca-base]
+name=Packages used by Paraguay Educa
+baseurl=http://repo.paraguayeduca.org/yum/base
+enabled=1
+gpgcheck=0

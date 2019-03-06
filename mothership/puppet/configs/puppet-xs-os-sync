@@ -1,0 +1,17 @@
+#!/bin/bash
+# Synchronize latest OS builds from mothership
+
+# sleep up to 2 hours for some load balancing
+sleep $((($RANDOM % 7200)))
+
+rsync -a --partial --partial-dir=.rsyncpartial \
+	rsync://mothership.caacupe.paraguayeduca.org/os/ \
+	/library/xs-rsync/xobuilds-packed/
+
+if [[ $? != 0 ]]; then
+	echo "Failed to sync"
+	exit 1
+fi
+
+xs-refresh-xobuilds.py
+

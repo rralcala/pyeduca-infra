@@ -1,0 +1,79 @@
+#!/bin/bash
+# Restore XS user data from a backup previously created with xs-backup
+# Author: Daniel Drake <dsd@laptop.org>
+#
+# TODO:
+#  check that input is .xsbackup1
+#  testing
+
+if [[ $# -ne 1 ]]; then
+	echo "Usage: $0 <inputfile>" >&2
+	echo >&2
+	echo "Restores XS user data from <inputfile>. Accepts format xsbackup1." >&2
+	exit 1
+fi
+
+if [[ "$(whoami)" != "root" ]]; then
+	echo "Must be run as root." >&2
+	exit 1
+fi
+
+src=$1
+
+compressflags=""
+if [[ ${src} == *.xsbackup1.gz ]]; then
+	compressflags="-z"
+elif [[ ${src} == *.xsbackup1.bz2 ]]; then
+	compressflags="-j"
+elif [[ ${src} != *.xsbackup1 ]]; then
+	echo "Expected a .xsbackup1 file, optionally compressed." >&2
+	exit 1
+fi
+
+echo "Restoring from backup $src"
+
+echo " - Restore Moodle database"
+tar --extract ${compressflags} --to-stdout -f ${src} library/xs-backup-moodle.pgsql | sudo -u postgres pg_restore -Fc > /dev/null
+if [[ $? != 0 ]]; then
+	echo "Failed to restore moodle database." >&2
+	exit 1
+fi
+
+echo " - Restore user information"
+/etc/init.d/idmgr stop
+tar --extract ${compressflags} -C / -f ${src} var/lib/moodle home/idmgr/identity.db
+if [[ $? != 0 ]]; then
+	echo "Error restoring user information" >&2
+	/etc/init.d/idmgr start
+	exit 1
+fi
+
+echo " - Create user accounts"
+IFS="
+"
+errs=0
+for line in $(/home/idmgr/list_registration); do
+	# only match lines that include a tab
+	# (this ignores the first line that says "Listing registrations...")
+	[[ $line =~ "	" ]] || continue
+	fullname=${line%%	*}
+	username=${line#*	}
+	echo -e "${username}\n${fullname}" | /home/idmgr/create_user --passwd-only
+	[[ $? == 0 ]] || (( errs++ ))
+done
+[[ ${errs} -gt 0 ]] && echo "WARNING: encountered $errs errors recreating user accounts." >&2
+
+/etc/init.d/idmgr start
+
+# important: must be done after the user accounts are created, so that
+# directory ownership can be set accordingly.
+echo " - Restore user data"
+tar --extract ${compressflags} -C / -f ${src} library/users
+if [[ $? != 0 ]]; then
+	echo "User data restore did not succeed." >&2
+	exit 1
+fi
+
+echo "Done!"
+exit 0
+

@@ -4,14 +4,14 @@ metadata:
   name: yaas-web
 spec:
   ports:
-  - port: 80 
+  - port: 3000
   selector:
     app: yaas-web
   type: NodePort
   ports:  
   - name: yaas
-    port: 80
-    targetPort: 80
+    port: 3000
+    targetPort: 3000
     nodePort: 30081
     protocol: TCP   
 ---
@@ -35,12 +35,12 @@ spec:
         name: yaas-web
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
+        - containerPort: 3000
           name: yaas
         volumeMounts:
           # name must match the volume name below
           - name: yaas-config
-            mountPath: /var/yaas-web/config/secrets/
+            mountPath: /app/config/secrets/
       volumes:
         - name: yaas-config 
           secret:

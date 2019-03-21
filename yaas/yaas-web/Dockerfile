@@ -1,29 +1,33 @@
-FROM phusion/passenger-ruby19
+FROM ruby:1.9.3-p551
 
-ENV HOME /root
-CMD ["/sbin/my_init"]
-EXPOSE 80
+# Install apt based dependencies required to run Rails as 
+# well as RubyGems. As the Ruby image itself is based on a 
+# Debian image, we use apt-get to install those.
+RUN apt-get update && apt-get install -y \ 
+  build-essential \ 
+  nodejs
 
-RUN rm -f /etc/service/nginx/down
-RUN rm /etc/nginx/sites-enabled/default
+# Configure the main working directory. This is the base 
+# directory used in any further RUN, COPY, and ENTRYPOINT 
+# commands.
+RUN mkdir -p /app 
+WORKDIR /app
 
-ADD nginx.conf /etc/nginx/sites-enabled/webapp.conf
-ADD rails-env.conf /etc/nginx/main.d/rails-env.conf
-RUN rm /etc/apt/sources.list.d/redis.list
-RUN apt-get remove -y openssh-server isc-dhcp-common isc-dhcp-client 
-RUN apt-get update
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get upgrade --yes --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+# Copy the Gemfile as well as the Gemfile.lock and install 
+# the RubyGems. This is a separate step so the dependencies 
+# will be cached unless changes to one of those two files 
+# are made.
+COPY Gemfile Gemfile.lock ./ 
+RUN gem install bundler -v 1.9.3 && bundle install --jobs 20 --retry 5
 
-RUN mkdir -p /var/yaas-web
-ADD Gemfile /var/yaas-web/Gemfile
+# Copy the main application.
+COPY . ./
 
-WORKDIR /var/yaas-web
+# Expose port 3000 to the Docker host, so we can access it 
+# from the outside.
+EXPOSE 3000
 
-RUN bundle install
-
-ADD . /var/yaas-web
-RUN chown -R app:app /var/yaas-web
-
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
+# The main command to run when the container starts. Also 
+# tell the Rails dev server to bind to all interfaces by 
+# default.
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-e", "production"]

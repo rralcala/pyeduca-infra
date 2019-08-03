@@ -1,6 +1,8 @@
 #!/bin/bash
 # check_nodes       Init script for running the daemon that updates access points statuses
 #
+# Author:       Raul Gutierrez S. <rgs@paraguayeduca.org>
+#
 # chkconfig: - 98 02
 #
 # description: access point monitoring daemon

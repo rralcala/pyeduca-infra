@@ -41,6 +41,10 @@ spec:
           # name must match the volume name below
           - name: inventario-config
             mountPath: /var/inventario/config/secrets/
+      hostAliases:
+      - hostnames:
+        - inventario.paraguayeduca.org
+        ip: 127.0.0.1
       volumes:
         - name: inventario-config 
           secret:

@@ -11,7 +11,7 @@ spec:
     port: 8140
     targetPort: 8140
   externalIPs:
-  - 192.168.1.154 
+  - 192.168.0.7
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment

@@ -4,7 +4,6 @@
 :OUTPUT ACCEPT [0:0]
 @@SQUID@@
 -A POSTROUTING -o @@WAN@@ -j MASQUERADE
--A PREROUTING -s 172.18.0.1/16 -p udp -m udp --dport 53 -j DNAT --to-destination 127.0.0.1:53
 COMMIT
 *filter
 :INPUT ACCEPT [0:0]

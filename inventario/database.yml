@@ -5,7 +5,7 @@ development:
   database: inventario
   host: mysql 
   user: root
-  password: your-mysql-password-here
+  password: REPLACEME
   timeout: 5000
 
 # Warning: The database defined as "test" will be erased and
@@ -16,6 +16,6 @@ production:
   database: inventario
   host: mysql 
   user: root
-  password: your-mysql-password-here
+  password: REPLACEME
   timeout: 5000
 

@@ -10,7 +10,7 @@ development:
   host: mysql 
   timeout: 5000
   username: root
-  password: your-mysql-password-here
+  password: REPLACEME
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -31,4 +31,4 @@ production:
   pool: 5
   timeout: 5000
   username: root
-  password: your-mysql-password-here
+  password: REPLACEME

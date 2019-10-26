@@ -1,0 +1,37 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup
+spec:
+  schedule: "0 0 * * 0"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: jobs
+            imagePullPolicy: IfNotPresent
+            env:
+              - name: MYSQL_PASSWD
+                valueFrom:
+                  secretKeyRef:
+                    name: creds
+                    key: mysql
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: creds
+                    key: aws-key 
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: creds
+                    key: aws-secret
+            command: ["/bin/sh","-c"]
+            args: ["mysqldump -h mysql -p$MYSQL_PASSWD inventario | bzip2 > inventario.sql.bz2 && \
+            aws s3 cp inventario.sql.bz2 s3://pyeduca/inventario.sql.bz2; \
+            mysqldump -h mysql -p$MYSQL_PASSWD yaas | bzip2 > yaas.sql.bz2 && \
+            aws s3 cp yaas.sql.bz2 s3://pyeduca/yaas.sql.bz2;"]
+          restartPolicy: Never
+      backoffLimit: 4

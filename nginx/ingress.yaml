@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: "pyeduca-ingress"
+spec:
+  tls:
+  - hosts:
+    - inventario.paraguayeduca.org
+    - a.paraguayeduca.org
+    secretName: pyeduca-tls
+  rules:
+  - host: inventario.paraguayeduca.org
+    http:
+      paths:
+      # The * is needed so that all traffic gets redirected to nginx
+      - path: /
+        backend:
+          serviceName: inventario
+          servicePort: 80
+      - path: /.well-known
+        backend:
+          serviceName: letsencrypt
+          servicePort: 80
+  - host: a.paraguayeduca.org
+    http:
+      paths:
+      # The * is needed so that all traffic gets redirected to nginx
+      - path: /
+        backend:
+          serviceName: yaas-web
+          servicePort: 3000
+      - path: /.well-known
+        backend:
+          serviceName: letsencrypt
+          servicePort: 80

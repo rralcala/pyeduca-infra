@@ -7,12 +7,9 @@ spec:
   - port: 80 
   selector:
     app: inventario
-  type: NodePort
   ports:  
   - name: inventario
     port: 80
-    targetPort: 80
-    nodePort: 30080
     protocol: TCP   
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2

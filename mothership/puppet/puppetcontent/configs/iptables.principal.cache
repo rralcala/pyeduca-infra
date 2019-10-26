@@ -27,8 +27,6 @@ COMMIT
 -A PREROUTING -i mshbond0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
 -A PREROUTING -i mshbond1 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
 -A PREROUTING -i mshbond2 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
-
--A PREROUTING -s 172.18.0.1/16 -p udp -m udp --dport 53 -j DNAT --to-destination 127.0.0.1:53
 -A POSTROUTING -o eth0 -j MASQUERADE
 COMMIT
 # Completed on Tue Aug 28 15:56:43 2012

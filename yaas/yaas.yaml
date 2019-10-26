@@ -7,12 +7,9 @@ spec:
   - port: 3000
   selector:
     app: yaas-web
-  type: NodePort
   ports:  
-  - name: yaas
+  - name: yaas-web
     port: 3000
-    targetPort: 3000
-    nodePort: 30081
     protocol: TCP   
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
@@ -36,7 +33,7 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
-          name: yaas
+          name: yaas-web
         volumeMounts:
           # name must match the volume name below
           - name: yaas-config

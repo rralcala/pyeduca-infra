@@ -17,7 +17,17 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     name: creds
-                    key: aws-key 
+                    key: aws-key
+              - name: INV_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: creds
+                    key: inv-user
+              - name: INV_PASSWD
+                valueFrom:
+                  secretKeyRef:
+                    name: creds
+                    key: inv-passwd
               - name: AWS_SECRET_ACCESS_KEY
                 valueFrom:
                   secretKeyRef:

@@ -4,6 +4,33 @@ metadata:
   name: pyeduca-tls
 type: Opaque
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: default-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - deployments
+  - secrets
+  verbs:
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  creationTimestamp: null
+  name: default-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: default-role
+subjects:
+- kind: ServiceAccount
+  name: default
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -21,7 +48,7 @@ spec:
       containers:
       - image: sjenning/kube-nginx-letsencrypt:0.8.1-1
         name: letsencrypt
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - name: letsencrypt
           containerPort: 80
